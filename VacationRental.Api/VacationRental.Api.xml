@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>VacationRental.Api</name>
+    </assembly>
+    <members>
+        <member name="M:VacationRental.Api.Controllers.BookingsController.Get(System.Int32)">
+            <summary>
+            Get the booking info with given booking id 
+            </summary>  
+            <response code="200">Returns booking info</response>
+            <response code="400">Booking not found</response>
+        </member>
+        <member name="M:VacationRental.Api.Controllers.BookingsController.Post(VacationRental.Domain.BookingBindingModel)">
+            <summary>
+            Create a new booking for a rental with start date and number of nights
+            </summary>  
+            <response code="201">Returns the newly created booking id</response>
+            <response code="400">Rental not found</response>
+        </member>
+        <member name="M:VacationRental.Api.Controllers.CalendarController.Get(System.Int32,System.DateTime,System.Int32)">
+            <summary>
+            Get the booking info and preparation time for a rental from a start date to the number of nights given
+            </summary>
+            <response code="200">Returns calendar info from a date: bookings and preparation time</response>
+            <response code="400">Rental not found or number of nights not greater than 0</response>
+        </member>
+        <member name="M:VacationRental.Api.Controllers.RentalsController.Get(System.Int32)">
+            <summary>
+            Get the rental id and its number of units with given rental id
+            </summary>  
+            <response code="200">Returns rental id and its units</response>
+            <response code="400">Rental not found</response>
+        </member>
+        <member name="M:VacationRental.Api.Controllers.RentalsController.Post(VacationRental.Domain.RentalPrepTimeBindingModel)">
+            <summary>
+            Create a new rental with number of units and number of preparation days
+            </summary>  
+            <response code="201">Returns the newly created rental id</response>        
+        </member>
+    </members>
+</doc>

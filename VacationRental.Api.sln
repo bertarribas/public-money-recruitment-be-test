@@ -7,6 +7,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VacationRental.Api", "Vacat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VacationRental.Api.Tests", "VacationRental.Api.Tests\VacationRental.Api.Tests.csproj", "{57FE6E13-7144-459F-BCA8-431087D3DAEE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VacationRental.Domain", "VacationRental.Domain\VacationRental.Domain.csproj", "{E1A90225-E9F3-4785-A1A7-931A0B25F186}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VacationRental.DataAccess", "VacationRental.DataAccess\VacationRental.DataAccess.csproj", "{801FB934-4C63-4BFB-93AF-03DBB009A0D9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VacationRental.Exceptions", "VacationRental.Exceptions\VacationRental.Exceptions.csproj", "{3D16663D-DD67-45CF-BE8E-18F16D92B2B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +27,18 @@ Global
 		{57FE6E13-7144-459F-BCA8-431087D3DAEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57FE6E13-7144-459F-BCA8-431087D3DAEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57FE6E13-7144-459F-BCA8-431087D3DAEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1A90225-E9F3-4785-A1A7-931A0B25F186}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1A90225-E9F3-4785-A1A7-931A0B25F186}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1A90225-E9F3-4785-A1A7-931A0B25F186}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1A90225-E9F3-4785-A1A7-931A0B25F186}.Release|Any CPU.Build.0 = Release|Any CPU
+		{801FB934-4C63-4BFB-93AF-03DBB009A0D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{801FB934-4C63-4BFB-93AF-03DBB009A0D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{801FB934-4C63-4BFB-93AF-03DBB009A0D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{801FB934-4C63-4BFB-93AF-03DBB009A0D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D16663D-DD67-45CF-BE8E-18F16D92B2B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D16663D-DD67-45CF-BE8E-18F16D92B2B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D16663D-DD67-45CF-BE8E-18F16D92B2B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D16663D-DD67-45CF-BE8E-18F16D92B2B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

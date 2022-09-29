@@ -1,7 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
-using VacationRental.Api.Models;
+using VacationRental.Domain.ViewModels;
+using VacationRental.Domain;
+using Microsoft.AspNetCore.Http;
+using VacationRental.Domain.Interfaces;
+using System.Linq;
 
 namespace VacationRental.Api.Controllers
 {
@@ -9,64 +12,73 @@ namespace VacationRental.Api.Controllers
     [ApiController]
     public class BookingsController : ControllerBase
     {
-        private readonly IDictionary<int, RentalViewModel> _rentals;
-        private readonly IDictionary<int, BookingViewModel> _bookings;
+        private readonly IDictionary<int, RentalPrepTimeViewModel> _rentals;
+        private IDictionary<int, BookingCompleteViewModel> _bookings;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public BookingsController(
-            IDictionary<int, RentalViewModel> rentals,
-            IDictionary<int, BookingViewModel> bookings)
+        public BookingsController(IDictionary<int, RentalPrepTimeViewModel> rentals, IDictionary<int, BookingCompleteViewModel> bookings,
+                                  IUnitOfWork unitOfWork)
         {
             _rentals = rentals;
             _bookings = bookings;
+            _unitOfWork = unitOfWork;
         }
 
+        /// <summary>
+        /// Get the booking info with given booking id 
+        /// </summary>  
+        /// <response code="200">Returns booking info</response>
+        /// <response code="400">Booking not found</response>
         [HttpGet]
         [Route("{bookingId:int}")]
-        public BookingViewModel Get(int bookingId)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult Get(int bookingId)
         {
-            if (!_bookings.ContainsKey(bookingId))
-                throw new ApplicationException("Booking not found");
-
-            return _bookings[bookingId];
+            ModelState.AddModelError(nameof(Get), Resources.ExceptionMessages.BookingNotFound);
+            return !_bookings.ContainsKey(bookingId) ? ValidationProblem(ModelState) : Ok(_bookings[bookingId]);
         }
 
+        /// <summary>
+        /// Create a new booking for a rental with start date and number of nights
+        /// </summary>  
+        /// <response code="201">Returns the newly created booking id</response>
+        /// <response code="400">Rental not found</response>
         [HttpPost]
-        public ResourceIdViewModel Post(BookingBindingModel model)
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult Post(BookingBindingModel model)
         {
-            if (model.Nights <= 0)
-                throw new ApplicationException("Nigts must be positive");
+            int lastUnitBookingRental = 0;
+
             if (!_rentals.ContainsKey(model.RentalId))
-                throw new ApplicationException("Rental not found");
-
-            for (var i = 0; i < model.Nights; i++)
             {
-                var count = 0;
-                foreach (var booking in _bookings.Values)
-                {
-                    if (booking.RentalId == model.RentalId
-                        && (booking.Start <= model.Start.Date && booking.Start.AddDays(booking.Nights) > model.Start.Date)
-                        || (booking.Start < model.Start.AddDays(model.Nights) && booking.Start.AddDays(booking.Nights) >= model.Start.AddDays(model.Nights))
-                        || (booking.Start > model.Start && booking.Start.AddDays(booking.Nights) < model.Start.AddDays(model.Nights)))
-                    {
-                        count++;
-                    }
-                }
-                if (count >= _rentals[model.RentalId].Units)
-                    throw new ApplicationException("Not available");
+                ModelState.AddModelError(nameof(Get), Resources.ExceptionMessages.RentalNotFound);
+                return ValidationProblem(ModelState);
             }
-
-
-            var key = new ResourceIdViewModel { Id = _bookings.Keys.Count + 1 };
-
-            _bookings.Add(key.Id, new BookingViewModel
+            else
             {
-                Id = key.Id,
-                Nights = model.Nights,
-                RentalId = model.RentalId,
-                Start = model.Start.Date
-            });
+                if (_bookings.Count > 0)
+                {
+                    for (var i = 0; i < model.Nights; i++)
+                    {
+                        int bookedUnits = _unitOfWork.BookingsComplete.GetOccupiedUnits(model, _bookings, _rentals[model.RentalId].PreparationTimeInDays);
 
-            return key;
+                        if (bookedUnits >= _rentals[model.RentalId].Units)
+                        {
+                            ModelState.AddModelError(nameof(Get), Resources.ExceptionMessages.RentalNotAvailable);
+                            return ValidationProblem(ModelState);
+                        }
+                    }
+                    lastUnitBookingRental = _bookings.Where(ri => ri.Value.RentalId == model.RentalId).Select(u => u.Value.Unit).LastOrDefault();
+                }
+                if (lastUnitBookingRental < _rentals[model.RentalId].Units) lastUnitBookingRental += 1;                
+
+                var resourceId = _unitOfWork.ResourceId.GetNewResourceId(_bookings.Keys.Count);
+
+                _unitOfWork.BookingsComplete.Add(ref _bookings, resourceId.Id, model, lastUnitBookingRental);
+                return CreatedAtAction(nameof(Post), resourceId);
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
-namespace VacationRental.Api.Models
+namespace  VacationRental.Domain
 {
     public class BookingBindingModel
     {
@@ -13,6 +14,8 @@ namespace VacationRental.Api.Models
         }
 
         private DateTime _startIgnoreTime;
+
+        [Range(1, double.MaxValue, ErrorMessage = "The field {0} must be greater than {1}")]
         public int Nights { get; set; }
     }
 }
