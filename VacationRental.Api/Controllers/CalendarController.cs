@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using VacationRental.Api.Models;
+using VacationRental.Domain;
+using VacationRental.Domain.Interfaces;
+using VacationRental.Domain.ViewModels;
+
 
 namespace VacationRental.Api.Controllers
 {
@@ -9,51 +13,45 @@ namespace VacationRental.Api.Controllers
     [ApiController]
     public class CalendarController : ControllerBase
     {
-        private readonly IDictionary<int, RentalViewModel> _rentals;
-        private readonly IDictionary<int, BookingViewModel> _bookings;
+        private readonly IDictionary<int, RentalPrepTimeViewModel> _rentals;
+        private readonly IDictionary<int, BookingCompleteViewModel> _bookings;
+        private readonly IUnitOfWork _unitOfWork;
 
         public CalendarController(
-            IDictionary<int, RentalViewModel> rentals,
-            IDictionary<int, BookingViewModel> bookings)
+            IDictionary<int, RentalPrepTimeViewModel> rentals,
+            IDictionary<int, BookingCompleteViewModel> bookings,
+            IUnitOfWork unitOfWork)
         {
             _rentals = rentals;
             _bookings = bookings;
+            _unitOfWork = unitOfWork;
         }
 
+        /// <summary>
+        /// Get the booking info and preparation time for a rental from a start date to the number of nights given
+        /// </summary>
+        /// <response code="200">Returns calendar info from a date: bookings and preparation time</response>
+        /// <response code="400">Rental not found or number of nights not greater than 0</response>
         [HttpGet]
-        public CalendarViewModel Get(int rentalId, DateTime start, int nights)
-        {
-            if (nights < 0)
-                throw new ApplicationException("Nights must be positive");
-            if (!_rentals.ContainsKey(rentalId))
-                throw new ApplicationException("Rental not found");
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult Get(int rentalId, DateTime start, int nights)
+        {          
+            CalendarDataBindingModel calendarData = _unitOfWork.CalendarsDataBM(new CalendarDataBindingModel(rentalId, start, nights, _bookings, _rentals));
 
-            var result = new CalendarViewModel 
+            string validationError = _unitOfWork.CalendarsData.Validate(calendarData);
+            if (String.IsNullOrEmpty(validationError))
             {
-                RentalId = rentalId,
-                Dates = new List<CalendarDateViewModel>() 
-            };
-            for (var i = 0; i < nights; i++)
-            {
-                var date = new CalendarDateViewModel
-                {
-                    Date = start.Date.AddDays(i),
-                    Bookings = new List<CalendarBookingViewModel>()
-                };
+                CalendarCompleteViewModel calendar = _unitOfWork.CalendarsComplete.CreateCalendar(calendarData);
 
-                foreach (var booking in _bookings.Values)
-                {
-                    if (booking.RentalId == rentalId
-                        && booking.Start <= date.Date && booking.Start.AddDays(booking.Nights) > date.Date)
-                    {
-                        date.Bookings.Add(new CalendarBookingViewModel { Id = booking.Id });
-                    }
-                }
-
-                result.Dates.Add(date);
+                _unitOfWork.CalendarDates.CreateCalendarDates(ref calendar, calendarData);
+                return Ok(calendar);
             }
-
-            return result;
+            else
+            {
+                ModelState.AddModelError(nameof(Get), validationError);
+                return ValidationProblem(ModelState);
+            }            
         }
     }
 }
